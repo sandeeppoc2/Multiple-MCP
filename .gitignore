@@ -1,0 +1,25 @@
+node_modules/
+
+# Secrets - never commit tokens
+.env
+.env.local
+# Copy of .mcp.json with real tokens pasted in, for clients that do not expand ${VAR}
+.mcp.local.json
+
+# Playwright MCP session/profile artifacts
+.playwright-mcp/
+.playwright-mcp-*/
+
+# Generated run artifacts
+reports/
+*.log
+
+# Screenshots captured by browser automation (large binaries, not code)
+screenshots/
+
+# Cloned third-party code that we scan (never commit someone else's repo)
+scans/
+
+# OS noise
+.DS_Store
+Thumbs.db

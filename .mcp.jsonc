@@ -1,0 +1,106 @@
+// ============================================================================
+// Overall MCP - annotated configuration (the version humans read)
+// ============================================================================
+//
+// Two MCP transport types are mixed in this one config. The distinction is the
+// single most important thing to understand about MCP servers:
+//
+//   REMOTE  (type: "http")
+//     Your MCP client opens an HTTPS connection to a server somebody else
+//     hosts. No package is installed, no process runs on this machine, and the
+//     vendor can update it without you. You authenticate with a token or OAuth,
+//     and the vendor sees every tool call you make.
+//
+//   LOCAL   (stdio - no "type" field)
+//     Your MCP client launches a child process ON THIS MACHINE and speaks
+//     JSON-RPC to it over stdin/stdout. The code runs with your user's
+//     privileges and your network access. It works offline, and you pin the
+//     exact version - but it needs installing, and a bad package is a real risk.
+//
+// Rule of thumb: remote = someone else's server, reachable over the network.
+//               local  = a program your client starts and talks to over a pipe.
+//
+// ----------------------------------------------------------------------------
+// This file is the readable copy. `.mcp.json` is the copy your MCP client
+// actually loads, and it must stay strict valid JSON - JSON has no comment
+// syntax, so these notes cannot live there.
+//
+// `npm run check` parses this file, strips the comments, and FAILS if its
+// servers differ from `.mcp.json`. The comments therefore cannot go stale.
+// ----------------------------------------------------------------------------
+
+{
+  "mcpServers": {
+    // ---- REMOTE -------------------------------------------------------------
+    // Figma hosts this server. Your client connects out to mcp.figma.com.
+    // Nothing is installed locally and no local process is started.
+    // Auth: OAuth - a browser window opens on first use. No token is stored in
+    // this repo, which is why this entry is safe to commit.
+    // Note: the current endpoint is /mcp. The older /sse URL is superseded.
+    // Caveat: a script cannot complete OAuth, so `npm run check` will only ever
+    // report this endpoint as reachable (HTTP 401), never as verified.
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+
+    // ---- LOCAL --------------------------------------------------------------
+    // A real browser-automation server running as a child process on this
+    // machine. It inherits your user and your network access - the opposite of
+    // a remote server's isolation.
+    // Pinned to node_modules on purpose: instant startup, works offline, and the
+    // version cannot change under you.
+    //   --browser msedge  uses the Edge already installed on this machine
+    //   --headless        remove this to WATCH the browser work while debugging
+    // Exposes 25 tools (browser_navigate, browser_click, browser_snapshot, ...).
+    "playwright": {
+      "command": "node",
+      "args": [
+        "node_modules/@playwright/mcp/cli.js",
+        "--browser",
+        "msedge",
+        "--headless"
+      ]
+    },
+
+    // ---- LOCAL --------------------------------------------------------------
+    // The Snyk CLI ships its own MCP server, which is why this is the official
+    // one: there is no separate @snyk/mcp package, and unlike Figma and GitHub
+    // above, Snyk publishes NO hosted remote endpoint. It has to be local.
+    // Auth: SNYK_TOKEN below, or run `npx snyk auth` once for browser OAuth.
+    // The ${SNYK_TOKEN} placeholder is expanded by your MCP client from ITS OWN
+    // environment - NOT from this folder's .env file. See README.
+    // Exposes 14 tools (snyk_code_scan, snyk_sca_scan, snyk_iac_scan, ...).
+    "snyk": {
+      "command": "node",
+      "args": [
+        "node_modules/snyk/bin/snyk",
+        "mcp",
+        "-t",
+        "stdio"
+      ],
+      "env": {
+        "SNYK_TOKEN": "${SNYK_TOKEN}"
+      }
+    },
+
+    // ---- REMOTE -------------------------------------------------------------
+    // GitHub hosts this at api.githubcopilot.com. Again: no local process, and
+    // nothing to install.
+    // The old @modelcontextprotocol/server-github npm package is DEPRECATED.
+    // Use this endpoint, not that package.
+    // Auth: a personal access token sent as a bearer header. Supply
+    // GITHUB_PERSONAL_ACCESS_TOKEN in your client's environment.
+    // Scope the token narrowly. GITHUB_TOOLSETS (optional, set in the client env)
+    // trims which tools are exposed and reduces context bloat.
+    // A Docker alternative exists (ghcr.io/github/github-mcp-server) if your
+    // policy forbids sending a token to a GitHub-hosted endpoint.
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    }
+  }
+}

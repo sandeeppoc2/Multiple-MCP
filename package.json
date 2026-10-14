@@ -1,0 +1,17 @@
+{
+  "name": "overall-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "One combined MCP configuration wiring up Figma, Playwright, Snyk and GitHub MCP servers side by side.",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "check:fast": "node scripts/check.mjs --skip-tools",
+    "scan": "node scripts/snyk-scan.mjs"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@playwright/mcp": "^0.0.83",
+    "snyk": "^1.1308.0"
+  }
+}

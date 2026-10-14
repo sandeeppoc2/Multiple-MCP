@@ -1,0 +1,52 @@
+{
+  "servers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/@playwright/mcp/cli.js",
+        "--browser",
+        "msedge",
+        "--headless"
+      ]
+    },
+    "snyk": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/snyk/bin/snyk",
+        "mcp",
+        "-t",
+        "stdio"
+      ],
+      "env": {
+        "SNYK_TOKEN": "${input:snyk-token}"
+      }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${input:github-token}"
+      }
+    }
+  },
+  "inputs": [
+    {
+      "id": "github-token",
+      "type": "promptString",
+      "description": "GitHub personal access token for the GitHub MCP server",
+      "password": true
+    },
+    {
+      "id": "snyk-token",
+      "type": "promptString",
+      "description": "Snyk API token (optional if you have run 'snyk auth')",
+      "password": true
+    }
+  ]
+}
